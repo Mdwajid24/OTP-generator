@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Generator</title>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --dark-color: #1e293b;
+            --light-color: #f8fafc;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #7badde;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--dark-color);
+        }
+
+        .container {
+            background-color: rgb(109, 46, 46);
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            width: 100%;
+            max-width: 500px;
+            margin: 1rem;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .otp-display {
+            background-color: #e6e7e9;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 0.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .otp-display span {
+            display: block;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .length-control {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background-color: white;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        select:focus, button:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+
+        .refresh-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            transition: transform 0.5s ease;
+        }
+
+        .loading .refresh-icon {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background-color: #4338ca;
+        }
+
+        button.secondary {
+            background-color: white;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        button.secondary:hover {
+            background-color: #f1f5ff;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: var(--dark-color);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            background-color: var(--success-color);
+        }
+
+        .toast.error {
+            background-color: var(--error-color);
+        }
+
+        .copy-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        @media (max-width: 500px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>OTP Generator</h1>
+        
+        <div class="otp-display">
+            <span id="otp-value">----</span>
+        </div>
+
+        <div class="controls">
+            <div class="length-control">
+                <label for="otp-length">OTP Length</label>
+                <select id="otp-length">
+                    <option value="4">4 Digits</option>
+                    <option value="5">5 Digits</option>
+                    <option value="6" selected>6 Digits</option>
+                    <option value="7">7 Digits</option>
+                    <option value="8">8 Digits</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button id="generate-btn">
+                <svg class="refresh-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Generate OTP
+            </button>
+            <button id="copy-btn" class="secondary">
+                <svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </svg>
+                Copy
+            </button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const otpDisplay = document.getElementById('otp-value');
+            const generateBtn = document.getElementById('generate-btn');
+            const copyBtn = document.getElementById('copy-btn');
+            const otpLengthSelect = document.getElementById('otp-length');
+            const toast = document.getElementById('toast');
+
+            // Generate initial OTP on page load
+            generateOTP();
+
+            generateBtn.addEventListener('click', generateOTP);
+            copyBtn.addEventListener('click', copyToClipboard);
+
+            function generateOTP() {
+                let length = parseInt(otpLengthSelect.value);
+                if (isNaN(length) || length < 4 || length > 8) {
+                    length = 6;
+                }
+                let otp = '';
+                
+                const array = new Uint32Array(length);
+                window.crypto.getRandomValues(array);
+                otp = Array.from(array, num => num % 10).join('');
+
+                // Clear previous animation classes
+                otpDisplay.classList.remove('fade-in');
+                // Force reflow to restart animation
+                void otpDisplay.offsetWidth;
+                // Add animation class back
+                otpDisplay.classList.add('fade-in');
+                
+                otpDisplay.textContent = otp;
+            }
+
+            function copyToClipboard() {
+                const otp = otpDisplay.textContent;
+                
+                // Don't copy if OTP hasn't been generated yet
+                if (otp === '----') {
+                    showToast('Generate an OTP first!', 'error');
+                    return;
+                }
+
+                navigator.clipboard.writeText(otp).then(() => {
+                    showToast('OTP copied to clipboard!', 'success');
+                }).catch(err => {
+                    showToast('Failed to copy OTP', 'error');
+                    console.error('Could not copy text: ', err);
+                });
+            }
+
+            function showToast(message, type) {
+                toast.textContent = message;
+                toast.className = 'toast';
+                toast.classList.add(type, 'show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
+```
+    
+</body>
+</html>
